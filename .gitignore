@@ -10,8 +10,6 @@ __pycache__/
 *.ipr
 *.iws
 
-docs/
-replays/
 **/*.sh
 **/.vs/
 **/*.user
