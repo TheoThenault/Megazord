@@ -9,7 +9,7 @@ __pycache__/
 *.class
 *.ipr
 *.iws
-**/*.exe
+
 docs/
 replays/
 **/*.sh
