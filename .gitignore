@@ -12,7 +12,7 @@ __pycache__/
 **/*.exe
 docs/
 replays/
-**/*.bat
 **/*.sh
 **/.vs/
 **/*.user
+make.bat
