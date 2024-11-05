@@ -9,8 +9,10 @@ __pycache__/
 *.class
 *.ipr
 *.iws
-
+**/*.obj
 **/*.sh
 **/.vs/
 **/*.user
 make.bat
+**/*.tlog
+HaliteAI/Debug
