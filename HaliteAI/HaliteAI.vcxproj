@@ -149,6 +149,10 @@
     <ClCompile Include="..\hlt\ship.cpp" />
     <ClCompile Include="..\Megazord\bateau.cpp" />
     <ClCompile Include="..\Megazord\hfsm.cpp" />
+    <ClCompile Include="..\Megazord\joueur.cpp" />
+    <ClCompile Include="..\Megazord\rules.cpp" />
+    <ClCompile Include="..\Megazord\utils.cpp" />
+    <ClCompile Include="..\Megazord\wheeloffortune.cpp" />
     <ClCompile Include="..\MyBot.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -169,6 +173,10 @@
     <ClInclude Include="..\hlt\types.hpp" />
     <ClInclude Include="..\Megazord\bateau.hpp" />
     <ClInclude Include="..\Megazord\hfsm.hpp" />
+    <ClInclude Include="..\Megazord\joueur.hpp" />
+    <ClInclude Include="..\Megazord\rules.hpp" />
+    <ClInclude Include="..\Megazord\utils.hpp" />
+    <ClInclude Include="..\Megazord\wheeloffortune.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
