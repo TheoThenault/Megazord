@@ -147,6 +147,8 @@
     <ClCompile Include="..\hlt\log.cpp" />
     <ClCompile Include="..\hlt\player.cpp" />
     <ClCompile Include="..\hlt\ship.cpp" />
+    <ClCompile Include="..\Megazord\bateau.cpp" />
+    <ClCompile Include="..\Megazord\hfsm.cpp" />
     <ClCompile Include="..\MyBot.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -165,6 +167,8 @@
     <ClInclude Include="..\hlt\ship.hpp" />
     <ClInclude Include="..\hlt\shipyard.hpp" />
     <ClInclude Include="..\hlt\types.hpp" />
+    <ClInclude Include="..\Megazord\bateau.hpp" />
+    <ClInclude Include="..\Megazord\hfsm.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

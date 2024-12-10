@@ -2,6 +2,8 @@
 #include "hlt/constants.hpp"
 #include "hlt/log.hpp"
 
+#include "Megazord/hfsm.hpp"
+
 #include <random>
 #include <ctime>
 
@@ -29,7 +31,9 @@ int main(int argc, char* argv[]) {
     // As soon as you call "ready" function below, the 2 second per turn timer will start.
     game.ready("Kayissa&Theo");
 
-    LOG("Bondour")
+    LOG("Bondour");
+
+    HFSM state_machine;
 
     for (;;) {
         game.update_frame();
