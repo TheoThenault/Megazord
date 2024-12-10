@@ -16,3 +16,6 @@ __pycache__/
 make.bat
 **/*.tlog
 HaliteAI/Debug
+HaliteAI/HaliteAI/
+HaliteAI/x64/
+out/
