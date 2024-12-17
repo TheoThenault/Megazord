@@ -3,6 +3,7 @@
 #include "hlt/log.hpp"
 
 #include "Megazord/hfsm.hpp"
+#include "Megazord/wheeloffortune.hpp"
 
 #include <random>
 #include <ctime>
@@ -26,6 +27,7 @@ int main(int argc, char* argv[]) {
         rng_seed = static_cast<unsigned int>(time(nullptr));
     }
     mt19937 rng(rng_seed);
+    srand(rng_seed);
 
     Game game;
     // At this point "game" variable is populated with initial map data.
@@ -38,6 +40,23 @@ int main(int argc, char* argv[]) {
     HFSM state_machine;
 
     Joueur joueur(&game);
+
+    Wheel w;
+
+    w.addEvent("Hi", 1);
+
+    LOG(w.roll());
+
+    w.addEvent("Bye", 2);
+
+    LOG(w.roll());
+    LOG(w.roll());
+    LOG(w.roll());
+    LOG(w.roll());
+    LOG(w.roll());
+    LOG(w.roll());
+    LOG(w.roll());
+    LOG(w.roll());
 
     for (;;) {
         game.update_frame();
