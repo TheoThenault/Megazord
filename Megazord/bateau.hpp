@@ -1,6 +1,7 @@
 #pragma once
 
-#include "game.hpp"
+#include "../hlt/game.hpp"
+#include "HFSM.hpp"
 
 /*
 	Classe spécifique pour le comportement des bateaux
@@ -14,7 +15,7 @@ public:
 	std::shared_ptr <hlt::Ship> ship;
 	std::vector <hlt::Command> command_queue;
 
-	void decide(std::vector <hlt::Command>* command_queue, std::shared_ptr <hlt::Ship> ship);
+	void decide(std::vector <hlt::Command>* command_queue, HFSM* state_machine, std::shared_ptr <hlt::Ship> ship);
 	void collect_halites();
 	void move_to_halites();
 	void move_to_dropoff(hlt::Position dropoff);

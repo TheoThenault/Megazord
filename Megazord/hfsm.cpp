@@ -13,7 +13,7 @@ HFSM::~HFSM()
 	hlt::log::log("AUREVOIE HFSM");
 };
 
-#include <cstdarg>  // used for variables args in FSM_STATE constructor
+/*#include <cstdarg>  // used for variables args in FSM_STATE constructor
 
 class FSM_STATE;  // pre declaration to use in FSM_TRANSITION
 
@@ -155,4 +155,4 @@ public:
     void  Reset() { if (CurrentState) CurrentState->Reset(); CurrentState = 0; }
     //---
     FSM_STATE* Behave(void* data) { if (CurrentState) return CurrentState->Behave(data); return CurrentState; }
-};
+};*/

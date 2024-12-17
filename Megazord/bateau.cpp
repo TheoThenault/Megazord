@@ -1,9 +1,9 @@
 #include "bateau.hpp"
-#include "game.hpp"
-#include "dropoff.hpp"
+#include "../hlt/game.hpp"
+#include "../hlt/dropoff.hpp"
 #include "hfsm.hpp"
-#include "hlt/game.hpp"
-#include "hlt/constants.hpp"
+#include "../hlt/game.hpp"
+#include "../hlt/constants.hpp"
 
 #include "../hlt/log.hpp"
 
@@ -20,7 +20,7 @@ bateau::~bateau()
 	hlt::log::log("AUREVOIE bateau");
 };
 
-void bateau::decide(std::vector <hlt::Command>* command_queue, std::shared_ptr <hlt::Ship> ship)
+void bateau::decide(std::vector <hlt::Command>* command_queue, HFSM* state_machine, std::shared_ptr <hlt::Ship> ship)
 {
 	ship = ship;
 	command_queue = command_queue;
