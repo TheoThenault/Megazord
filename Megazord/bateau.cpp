@@ -9,40 +9,40 @@
 
 
 
-bateau::bateau(hlt::Game* game)
+Bateau::Bateau(hlt::Game* game)
 {
 	game = game;
 	hlt::log::log("BONDOUR bateau");
 };
 
-bateau::~bateau()
+Bateau::~Bateau()
 {
 	hlt::log::log("AUREVOIE bateau");
 };
 
-void bateau::decide(std::vector <hlt::Command>* command_queue, HFSM* state_machine, std::shared_ptr <hlt::Ship> ship)
+void Bateau::decide(std::vector <hlt::Command>* command_queue, HFSM* state_machine, std::shared_ptr <hlt::Ship> ship)
 {
 	ship = ship;
 	command_queue = command_queue;
 };
 
-void bateau::collect_halites()
+void Bateau::collectHalites()
 {
 	ship->stay_still();
 };
 
-void bateau::move_to_halites()
+void Bateau::moveToHalites()
 {
 
 };
 
-void bateau::move_to_dropoff(hlt::Position dropoff)
+void Bateau::moveToStorage(hlt::Position dropoff)
 {
 	ship->move(game->game_map->naive_navigate(ship, dropoff));
 
 };
 
-void bateau::move_to_enemies(hlt::Position enemies)
+void Bateau::moveToEnemies(hlt::Position enemies)
 {
 
 };

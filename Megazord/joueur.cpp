@@ -93,7 +93,7 @@ void Joueur::createDropoff()
 
 	std::vector<std::shared_ptr<hlt::Ship>> eligible_ships;
 	int best_halite = 0;
-	int best_index = -1;
+	size_t best_index = -1;
 	for (auto& id_ship_pair : m_player->ships)
 	{
 		int halite = m_game->game_map->at(id_ship_pair.second)->halite;
