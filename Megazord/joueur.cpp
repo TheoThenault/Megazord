@@ -28,7 +28,7 @@ static void ruleSpawnBoat(void* _joueur)
 static void ruleCreateDropoff(void* _joueur)
 {
 	Joueur* joueur = (Joueur*)_joueur;
-	if (joueur->m_player->halite > 4000)
+	if (joueur->m_player->halite > COST_CREATE_DROPOFF)
 	{
 		for (auto& id_ship_pair : joueur->m_player->ships)
 		{
@@ -89,7 +89,11 @@ void Joueur::think(std::shared_ptr<hlt::Player> _player)
 
 void Joueur::createDropoff()
 {
+	// TODO : Improve the choice of the best ship
+
 	std::vector<std::shared_ptr<hlt::Ship>> eligible_ships;
+	int best_halite = 0;
+	int best_index = -1;
 	for (auto& id_ship_pair : m_player->ships)
 	{
 		int halite = m_game->game_map->at(id_ship_pair.second)->halite;
@@ -99,20 +103,25 @@ void Joueur::createDropoff()
 		{
 			m_rule_engine->setDesire(DESIRE_CREATEDROPOFF, 1);
 			eligible_ships.push_back(id_ship_pair.second);
+			if (halite > best_halite)
+			{
+				best_halite = halite;
+				best_index = eligible_ships.size() - 1;
+			}
 		}
 	}
 
-	// TODO : Sort for best candidate
-
-	for (auto& ship : eligible_ships)
+	if (best_index != -1)
 	{
 		if (m_expected_halite - COST_CREATE_DROPOFF > MIN_HALITE_THRESHOLD)
 		{
-			m_command_queue->push_back(ship->make_dropoff());
+			m_command_queue->push_back(eligible_ships[best_index]->make_dropoff());
 			m_expected_halite -= COST_CREATE_DROPOFF;
 			hlt::log::log("Create dropoff!");
 		}
 	}
+	
+
 }
 
 void Joueur::spawnBoat()
