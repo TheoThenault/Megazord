@@ -1,5 +1,6 @@
 #include "rules.hpp"
 #include "../hlt/log.hpp"
+#include "wheeloffortune.hpp"
 
 Rules::Rules(std::string _name, void* _parent) : m_name(_name), m_parent(_parent)
 {
@@ -20,41 +21,39 @@ std::string Rules::infer()
 		std::string rule_name = rule.first;
 		void_function_voidp rule_function = rule.second;
 
-		debug_log("Start of rule : " + rule_name);
+		debugLog("Start of rule : " + rule_name);
 
 		rule_function(m_parent);
 
-		debug_log("End of rule : " + rule_name);
+		debugLog("End of rule : " + rule_name);
 	}
+
+	// Dont roll the wheel without any events
+	if (m_desires.size() == 0)
+		return "null";
 
 	// Choose outcome
-	// TODO : Change to wheel of fortune
-	std::string max_name	= "null";
-	float		v_max = 0;
+	Wheel wheel;
 	for (desire_t d : m_desires)
 	{
-		if (d.second > v_max)
-		{
-			v_max = d.second;
-			max_name = d.first;
-		}
+		wheel.addEvent(d.first, d.second);
 	}
 
-	return max_name;
+	return wheel.roll();
 }
 
 void Rules::addRule(std::string _name, void_function_voidp _func)
 {
 	m_rules.push_back({ _name, _func });
 
-	debug_log("New rule : " + _name);
+	debugLog("New rule : " + _name);
 }
 
 void Rules::setDesire(std::string _name, float _val)
 {
 	m_desires.push_back({ _name, _val });
 
-	debug_log("{" + _name + ", " + std::to_string(_val) + "}");
+	debugLog("{" + _name + ", " + std::to_string(_val) + "}");
 }
 
 float Rules::getDesire(std::string _name)
@@ -83,7 +82,7 @@ int Rules::getRawDesire(std::string _name)
 	return -1;
 }
 
-void Rules::debug_log(std::string str)
+void Rules::debugLog(std::string str)
 {
 #ifdef _DEBUG
 	hlt::log::log("[" + m_name + "] " + str);

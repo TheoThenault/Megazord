@@ -27,7 +27,7 @@ public:
 
 	float getDesire(std::string);
 
-	void debug_log(std::string);
+	void debugLog(std::string);
 
 	void* m_parent;
 
