@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 
     HFSM state_machine;
 
-    Joueur joueur;
+    Joueur joueur(&game);
 
     for (;;) {
         game.update_frame();
@@ -46,7 +46,8 @@ int main(int argc, char* argv[]) {
 
         vector<Command> command_queue;
 
-        joueur.think();
+        joueur.setCommandQueue(&command_queue);
+        joueur.think(me);
 
         for (const auto& ship_iterator : me->ships) {
             shared_ptr<Ship> ship = ship_iterator.second;
@@ -58,13 +59,13 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        if (
-            game.turn_number <= 200 &&
-            me->halite >= constants::SHIP_COST &&
-            !game_map->at(me->shipyard)->is_occupied())
-        {
-            command_queue.push_back(me->shipyard->spawn());
-        }
+        //if (
+        //    game.turn_number <= 200 &&
+        //    me->halite >= constants::SHIP_COST &&
+        //    !game_map->at(me->shipyard)->is_occupied())
+        //{
+        //    command_queue.push_back(me->shipyard->spawn());
+        //}
 
         if (!game.end_turn(command_queue)) {
             break;
