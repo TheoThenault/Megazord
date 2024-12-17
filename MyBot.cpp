@@ -9,6 +9,7 @@
 #include <ctime>
 #include "Megazord/rules.hpp"
 #include "Megazord/joueur.hpp"
+#include "Megazord/bateau.hpp"
 
 using namespace std;
 using namespace hlt;
@@ -41,6 +42,8 @@ int main(int argc, char* argv[]) {
 
     Joueur joueur(&game);
 
+    bateau bateau(&game);
+
     Wheel w;
 
     w.addEvent("Hi", 1);
@@ -70,6 +73,7 @@ int main(int argc, char* argv[]) {
 
         for (const auto& ship_iterator : me->ships) {
             shared_ptr<Ship> ship = ship_iterator.second;
+            
             if (game_map->at(ship)->halite < constants::MAX_HALITE / 10 || ship->is_full()) {
                 Direction random_direction = ALL_CARDINALS[rng() % 4];
                 command_queue.push_back(ship->move(random_direction));

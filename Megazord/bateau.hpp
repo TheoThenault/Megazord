@@ -10,12 +10,15 @@ class bateau {
 public:
 	bateau(hlt::Game* game);
 	~bateau();
-	hlt::Game* game;
+	std::shared_ptr <hlt::Game> game;
+	std::shared_ptr <hlt::Ship> ship;
+	std::vector <hlt::Command> command_queue;
 
-	char collect_halites();
-	char move_to_halites();
-	char move_to_dropoff();
-	char move_to_enemies();
-;private:
+	void decide(std::vector <hlt::Command>* command_queue, std::shared_ptr <hlt::Ship> ship);
+	void collect_halites();
+	void move_to_halites();
+	void move_to_dropoff(hlt::Position dropoff);
+	void move_to_enemies(hlt::Position enemies);
+private:
 
 };
