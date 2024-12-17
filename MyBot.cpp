@@ -6,6 +6,8 @@
 
 #include <random>
 #include <ctime>
+#include "Megazord/rules.hpp"
+#include "Megazord/joueur.hpp"
 
 using namespace std;
 using namespace hlt;
@@ -35,12 +37,16 @@ int main(int argc, char* argv[]) {
 
     HFSM state_machine;
 
+    Joueur joueur;
+
     for (;;) {
         game.update_frame();
         shared_ptr<Player> me = game.me;
         unique_ptr<GameMap>& game_map = game.game_map;
 
         vector<Command> command_queue;
+
+        joueur.think();
 
         for (const auto& ship_iterator : me->ships) {
             shared_ptr<Ship> ship = ship_iterator.second;
