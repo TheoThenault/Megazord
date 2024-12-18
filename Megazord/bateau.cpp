@@ -74,6 +74,14 @@ float transRamasserHaliteToMoveToStorage(void* _data)
 	return 0;
 }
 
+float transRamasserHaliteToMoveToStorage2(void* _data)
+{
+	Bateau* bateau = (Bateau*)_data;
+
+
+
+}
+
 void wrpCollectHalite(void* _data)
 {
 	Bateau* bateau = (Bateau*) _data;
