@@ -109,7 +109,7 @@ float transRamasserHaliteToMoveToEnemie(void* _data) {
 }
 
 float transRamasserHaliteToMoveStorageFlee(void* _data) {
-	//TODO c'est un peu bête il faudrait un vrai état de fuite pour pouvoir en sortir si on est hors de danger
+	//TODO c'est un peu bÃªte il faudrait un vrai Ã©tat de fuite pour pouvoir en sortir si on est hors de danger
 	// remarque : on ne distingue pas les 3 enemies
 	if (diffnbBateau > 0)
 		return 1;
@@ -213,7 +213,7 @@ void Bateau::moveToEnemies(hlt::Position enemies)
 
 };
 
-/* code pour décider si on y va à un dropoff
+/* code pour dÃ©cider si on y va Ã  un dropoff
 	std::unordered_map < hlt::EntityId, std::shared_ptr < hlt::Dropoff >> *dropoffs = &bateau::game->me->dropoffs;
 	for (auto& iterator : *dropoffs)
 	{
