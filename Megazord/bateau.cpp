@@ -4,14 +4,15 @@
 #include "fsm.hpp"
 #include "../hlt/game.hpp"
 #include "../hlt/constants.hpp"
-
 #include "../hlt/log.hpp"
+#include "utils.hpp"
 
 
 
-Bateau::Bateau(hlt::Game* game)
+Bateau::Bateau(hlt::Game* game, std::shared_ptr<hlt::Player> _player)
 {
 	game = game;
+	m_player = _player;
 
 	setupStateMachine();
 
@@ -32,25 +33,94 @@ float transRamasserHaliteToMoveToHalite(void* _data)
 		return 0;
 }
 
+float transRamasserHaliteToMoveToStorage(void* _data)
+{
+	Bateau* bateau = (Bateau*)_data;
+
+	int halite_in_ship = bateau->ship->halite;
+	float cargaison = halite_in_ship / ((float)MAX_HALITE_IN_SHIP);
+
+	int closest_storage_distance = bateau->game->game_map->calculate_distance(
+		bateau->ship->position, bateau->m_player->shipyard->position
+	);
+	hlt::Position closest_storage = bateau->m_player->shipyard->position;
+
+	for (auto& dropoff_pair : bateau->m_player->dropoffs)
+	{
+		std::shared_ptr<hlt::Dropoff> dropoff = dropoff_pair.second;
+		int distance = bateau->game->game_map->calculate_distance(
+			bateau->ship->position, dropoff->position
+		);
+
+		if (distance < closest_storage_distance)
+		{
+			closest_storage_distance = distance;
+			closest_storage = dropoff->position;
+		}
+	}
+	
+	float distance_coeff = map(
+		STORAGE_DISTANCE_CLOSE, STORAGE_DISTANCE_FAR,
+		closest_storage_distance, 0.0f, 1.0f
+	);
+
+	float fuzzy_logic = cargaison * distance_coeff;
+
+	// TODO : Envoyer directement la logique floue ?
+	if (fuzzy_logic > 0.7f)
+	{
+		return 1;
+	}
+	return 0;
+}
+
 void wrpCollectHalite(void* _data)
 {
 	Bateau* bateau = (Bateau*) _data;
 	bateau->collectHalites();
 }
 
+void wrpMoveToHalites(void* _data)
+{
+	Bateau* bateau = (Bateau*)_data;
+	bateau->moveToHalites();
+}
+
+void wrpMoveToStorage(void* _data)
+{
+	Bateau* bateau = (Bateau*)_data;
+	bateau->moveToStorage(bateau->m_target);
+}
+
+void wrpMoveToEnemies(void* _data)
+{
+	Bateau* bateau = (Bateau*)_data;
+	bateau->moveToStorage(bateau->m_target);
+}
+
 void Bateau::setupStateMachine()
 {
 	FSM_STATE* state_ramaser_halite  = new FSM_STATE(wrpCollectHalite);
-	FSM_STATE* state_move_to_halite  = nullptr; // TODO
-	FSM_STATE* state_move_to_storage = nullptr; // TODO
-	FSM_STATE* state_move_to_enemie  = nullptr; // TODO
+	FSM_STATE* state_move_to_halite  = new FSM_STATE(wrpMoveToHalites);
+	FSM_STATE* state_move_to_storage = new FSM_STATE(wrpMoveToStorage);
+	FSM_STATE* state_move_to_enemie  = new FSM_STATE(wrpMoveToEnemies);
+
+	// Transitions state_ramaser_halite
 
 	FSM_TRANSITION* trans_ramaser_halite_to_move_to_halite = new FSM_TRANSITION(transRamasserHaliteToMoveToHalite, state_move_to_halite);
+	FSM_TRANSITION* trans_ramaser_halite_to_move_to_storage = new FSM_TRANSITION(transRamasserHaliteToMoveToStorage, state_move_to_storage);
 
 	state_ramaser_halite->InitTransitions(4,
 		trans_ramaser_halite_to_move_to_halite,
+		trans_ramaser_halite_to_move_to_storage,
 		// TODO
 	);
+
+	// Transitions state_move_to_halite
+
+	// Transitions state_move_to_storage
+
+	// Transitions state_move_to_enemie
 
 	m_state_machine = new FSM(4,
 		state_ramaser_halite,
