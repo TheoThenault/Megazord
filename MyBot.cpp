@@ -2,7 +2,6 @@
 #include "hlt/constants.hpp"
 #include "hlt/log.hpp"
 
-#include "Megazord/hfsm.hpp"
 #include "Megazord/wheeloffortune.hpp"
 
 #include <random>
@@ -10,6 +9,7 @@
 #include "Megazord/rules.hpp"
 #include "Megazord/joueur.hpp"
 #include "Megazord/bateau.hpp"
+#include "Megazord/fsm.hpp"
 
 using namespace std;
 using namespace hlt;
@@ -38,28 +38,10 @@ int main(int argc, char* argv[]) {
 
     LOG("Bondour");
 
-    HFSM state_machine;
-
     Joueur joueur(&game);
 
-    bateau bateau(&game);
+    Bateau bateau(&game);
 
-    Wheel w;
-
-    w.addEvent("Hi", 1);
-
-    LOG(w.roll());
-
-    w.addEvent("Bye", 2);
-
-    LOG(w.roll());
-    LOG(w.roll());
-    LOG(w.roll());
-    LOG(w.roll());
-    LOG(w.roll());
-    LOG(w.roll());
-    LOG(w.roll());
-    LOG(w.roll());
 
     for (;;) {
         game.update_frame();
@@ -80,7 +62,7 @@ int main(int argc, char* argv[]) {
             } else {
                 command_queue.push_back(ship->stay_still());
             }*/
-            bateau.decide(&command_queue, &state_machine, ship);
+            bateau.decide(&command_queue, ship);
         }
 
         //if (

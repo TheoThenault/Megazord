@@ -45,7 +45,7 @@
     <ClCompile Include="..\Megazord\bateau.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\Megazord\hfsm.cpp">
+    <ClCompile Include="..\Megazord\fsm.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="..\Megazord\joueur.cpp">
@@ -110,7 +110,7 @@
     <ClInclude Include="..\Megazord\bateau.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="..\Megazord\hfsm.hpp">
+    <ClInclude Include="..\Megazord\fsm.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="..\Megazord\joueur.hpp">
