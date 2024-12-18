@@ -8,7 +8,6 @@
 #include "utils.hpp"
 
 
-
 Bateau::Bateau(hlt::Game* game, std::shared_ptr<hlt::Player> _player)
 {
 	game = game;
@@ -74,6 +73,50 @@ float transRamasserHaliteToMoveToStorage(void* _data)
 	return 0;
 }
 
+float transMoveToHaliteToRamasserHalite(void* _data) {
+	Bateau* bateau = (Bateau*)_data;
+	if (bateau->game->game_map->at(bateau->ship)->halite >= 350)
+		return 1;
+	else
+		return 0;
+}
+
+float transMoveToStorageToMoveToHalites(void* _data) {
+	Bateau* bateau = (Bateau*)_data;
+	if (bateau->game->game_map->at(bateau->ship)->halite == 0)
+		return 1;
+	else
+		return 0;
+}
+
+float transRamasserHaliteToMoveToEnemie(void* _data) {
+	Bateau* bateau = (Bateau*)_data;
+	int halite_in_ship = bateau->ship->halite;
+	float cargaison = halite_in_ship / ((float)MAX_HALITE_IN_SHIP);
+
+	//decide which enemie TODO: choose the best one 
+
+	bateau->game->players
+
+	for (const auto& ship_iterator : me->ships) {
+		int halite_in_enemie_ship = ();
+		float cargaison_enemie = halite_in_enemie_ship / ((float)MAX_HALITE_IN_SHIP);
+
+		if ((diffnbBateau * cargaison_enemie * 1/cargaison) > 0.5f) {
+
+		}
+	}
+}
+
+float transRamasserHaliteToMoveStorageFlee(void* _data) {
+	//TODO c'est un peu bête il faudrait un vrai état de fuite pour pouvoir en sortir si on est hors de danger
+	// remarque : on ne distingue pas les 3 enemies
+	if (diffnbBateau > 0)
+		return 1;
+	else
+		return 0;
+}
+
 void wrpCollectHalite(void* _data)
 {
 	Bateau* bateau = (Bateau*) _data;
@@ -109,16 +152,27 @@ void Bateau::setupStateMachine()
 
 	FSM_TRANSITION* trans_ramaser_halite_to_move_to_halite = new FSM_TRANSITION(transRamasserHaliteToMoveToHalite, state_move_to_halite);
 	FSM_TRANSITION* trans_ramaser_halite_to_move_to_storage = new FSM_TRANSITION(transRamasserHaliteToMoveToStorage, state_move_to_storage);
+	FSM_TRANSITION* trans_ramaser_halite_to_move_to_storage_flee = new FSM_TRANSITION(transRamasserHaliteToMoveStorageFlee, state_move_to_storage);
+	FSM_TRANSITION* trans_ramaser_halite_to_move_to_enemie = new FSM_TRANSITION(transRamasserHaliteToMoveToEnemie, state_move_to_enemie);
 
 	state_ramaser_halite->InitTransitions(4,
 		trans_ramaser_halite_to_move_to_halite,
 		trans_ramaser_halite_to_move_to_storage,
-		// TODO
+		trans_ramaser_halite_to_move_to_storage_flee,
+		trans_ramaser_halite_to_move_to_enemie
 	);
 
 	// Transitions state_move_to_halite
+	FSM_TRANSITION* trans_move_to_halite_to_ramasser_halites = new FSM_TRANSITION(transMoveToHaliteToRamasserHalite, state_ramaser_halite);
+
+	state_move_to_halite->InitTransitions(1,
+		trans_move_to_halite_to_ramasser_halites);
 
 	// Transitions state_move_to_storage
+	FSM_TRANSITION* trans_move_to_dropoff_to_move_to_halites = new FSM_TRANSITION(transMoveToStorageToMoveToHalites, state_move_to_halite);
+
+	state_move_to_halite->InitTransitions(1,
+		trans_move_to_dropoff_to_move_to_halites);
 
 	// Transitions state_move_to_enemie
 
@@ -135,6 +189,8 @@ void Bateau::decide(std::vector <hlt::Command>* command_queue, std::shared_ptr <
 	ship = ship;
 	command_queue = command_queue;
 };
+
+//TODO: mark unsafe the cells the ship will be on next turn to avoid collisions
 
 void Bateau::collectHalites()
 {
