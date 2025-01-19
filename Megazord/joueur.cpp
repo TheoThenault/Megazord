@@ -11,14 +11,14 @@ static void ruleSpawnBoat(void* _joueur)
 	Joueur* joueur = (Joueur*)_joueur;
 	if (joueur->m_game->turn_number < MAX_TURN_NUMBER / 2)
 	{
-		if (joueur->m_player->halite > 1000)
+		if (joueur->m_player->halite > PLAYER_MIN_HALITE_THRESHOLD)
 		{
 			joueur->m_rule_engine->setDesire(DESIRE_SPAWNBOAT, 1);
 		}
 	}
 	else if (joueur->m_game->turn_number < MAX_TURN_NUMBER * (3 / 4))
 	{
-		if (joueur->m_player->halite > 5000)
+		if (joueur->m_player->halite > COST_CREATE_DROPOFF + PLAYER_MIN_HALITE_THRESHOLD)
 		{
 			joueur->m_rule_engine->setDesire(DESIRE_SPAWNBOAT, 1);
 		}
@@ -28,14 +28,22 @@ static void ruleSpawnBoat(void* _joueur)
 static void ruleCreateDropoff(void* _joueur)
 {
 	Joueur* joueur = (Joueur*)_joueur;
-	if (joueur->m_player->halite > COST_CREATE_DROPOFF)
+
+	LOG(std::to_string(joueur->m_player->halite > COST_CREATE_DROPOFF));
+	LOG(std::to_string(joueur->m_game->turn_number < MAX_TURN_NUMBER * (3 / 4)));
+
+	if (joueur->m_player->halite > COST_CREATE_DROPOFF && 
+		joueur->m_game->turn_number < MAX_TURN_NUMBER * (3 / 4.0f))
 	{
+		LOG("CREATE DROPOFF ?.??");
 		for (auto& id_ship_pair : joueur->m_player->ships)
 		{
 			int halite = joueur->m_game->game_map->at(id_ship_pair.second)->halite;
 			halite += id_ship_pair.second->halite;
 
-			if (halite > 1500)
+			LOG("[" + std::to_string(halite) + "]");
+
+			if (halite > SHIP_TRANSFORM_INTO_DROPOFF)
 			{
 				joueur->m_rule_engine->setDesire(DESIRE_CREATEDROPOFF, 1);
 			}
@@ -53,6 +61,10 @@ static void ruleWatchoutWhenSpawning(void* _joueur)
 		for (auto& ship_pair : joueur->m_player->ships)
 		{
 			if (ship_pair.second->position == joueur->m_player->shipyard->position)
+			{
+				joueur->m_rule_engine->setDesire(DESIRE_SPAWNBOAT, 0);
+			}
+			if (joueur->m_game->game_map->at(joueur->m_player->shipyard->position)->is_occupied())
 			{
 				joueur->m_rule_engine->setDesire(DESIRE_SPAWNBOAT, 0);
 			}
@@ -116,9 +128,8 @@ void Joueur::createDropoff()
 		int halite = m_game->game_map->at(id_ship_pair.second)->halite;
 		halite += id_ship_pair.second->halite;
 
-		if (halite > 1500)
+		if (halite > SHIP_TRANSFORM_INTO_DROPOFF)
 		{
-			m_rule_engine->setDesire(DESIRE_CREATEDROPOFF, 1);
 			eligible_ships.push_back(id_ship_pair.second);
 			if (halite > best_halite)
 			{
@@ -132,9 +143,8 @@ void Joueur::createDropoff()
 	{
 		if (m_expected_halite - COST_CREATE_DROPOFF > PLAYER_MIN_HALITE_THRESHOLD)
 		{
-			m_command_queue->push_back(eligible_ships[best_index]->make_dropoff());
-			m_expected_halite -= COST_CREATE_DROPOFF;
-			hlt::log::log("Create dropoff!");
+			boatAboutToTransform = eligible_ships[best_index]->id;
+			hlt::log::log("ABOUT TO CREATE DROPOFF");
 		}
 	}
 	

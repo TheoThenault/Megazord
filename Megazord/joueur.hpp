@@ -34,6 +34,8 @@ public:
 
 	int m_expected_halite;
 
+	int boatAboutToTransform = -1;
+
 private:
 
 	std::vector<hlt::Command>* m_command_queue;

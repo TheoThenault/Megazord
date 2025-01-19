@@ -16,11 +16,11 @@
 using namespace std;
 using namespace hlt;
 
-#ifdef _DEBUG
-# define LOG(X) log::log(X);
-#else
-# define LOG(X)
-#endif // DEBUG
+//#ifdef _DEBUG
+//# define LOG(X) log::log(X);
+//#else
+//# define LOG(X)
+//#endif // DEBUG
 
 int main(int argc, char* argv[]) {
     unsigned int rng_seed;
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<Bateau*> bateaux;
 
-    game.ready("Kayissa&Theo");
+    game.ready("Kayyissa&Theo");
 
     for (;;) {
         game.update_frame();
@@ -52,11 +52,8 @@ int main(int argc, char* argv[]) {
 
         LOG("HALITE " + to_string(me->halite));
 
-
-
         for (const auto& ship_iterator : me->ships) {
             shared_ptr<Ship> ship = ship_iterator.second;
-
             /*if (game_map->at(ship)->halite < constants::MAX_HALITE / 10 || ship->is_full()) {
                 Direction random_direction = ALL_CARDINALS[rng() % 4];
                 command_queue.push_back(ship->move(random_direction));
@@ -64,14 +61,17 @@ int main(int argc, char* argv[]) {
                 command_queue.push_back(ship->stay_still());
             }*/
 
-            int ship_index = shipIndex(&bateaux, ship);
+            int ship_index = shipIndex(&bateaux, ship->id);
             if (ship_index == -1)
             {
-                Bateau* bateau = new Bateau(&game, me, ship);
-                bateau->decide(&command_queue);
+                LOG("Nouveau bateau pour id : " + std::to_string(ship->id));
+                Bateau* bateau = new Bateau(&game, me, &joueur, ship->id);
+                bateau->decide(&command_queue, ship);
+                bateaux.push_back(bateau);
             }
             else {
-                bateaux[ship_index]->decide(&command_queue);
+                //LOG("Bateau existant pour id : " + std::to_string(ship->id));
+                bateaux[ship_index]->decide(&command_queue, ship);
             }
 
         }
@@ -91,6 +91,10 @@ int main(int argc, char* argv[]) {
             break;
         }
     }
+
+    for (Bateau* b : bateaux)
+        delete b;
+    bateaux.clear();
 
     return 0;
 }

@@ -3,6 +3,9 @@
 #include "../hlt/ship.hpp"
 #include "../hlt/game_map.hpp"
 
+#include <fstream>
+#include <iostream>
+
 /*
 	Transforme une valeur `val` présente entre `smin` et `smax` et la retourne
 	présente entre `omin` et `omax`
@@ -54,4 +57,61 @@ int nombreEnemies(hlt::Game* _game, std::shared_ptr<hlt::Player> _player, hlt::P
 	}
 
 	return diff;
+}
+
+bool isOccupied(hlt::Game* _game, std::shared_ptr<hlt::Player> _player, hlt::Position _pos)
+{
+	if (_game->game_map->at(_pos)->is_occupied())
+	{
+		for (const auto& ship_pair : _player->ships)
+		{
+			if (ship_pair.second == _game->game_map->at(_pos)->ship)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+hlt::Direction directionAvailable(hlt::Game* _game, std::shared_ptr<hlt::Player> _player, hlt::Position* _pos)
+{
+	if (!isOccupied(_game, _player, _pos->directional_offset(hlt::Direction::NORTH)))
+		return hlt::Direction::NORTH;
+	if (!isOccupied(_game, _player, _pos->directional_offset(hlt::Direction::SOUTH)))
+		return hlt::Direction::SOUTH;
+	if (!isOccupied(_game, _player, _pos->directional_offset(hlt::Direction::WEST)))
+		return hlt::Direction::WEST;
+	if (!isOccupied(_game, _player, _pos->directional_offset(hlt::Direction::EAST)))
+		return hlt::Direction::EAST;
+	return hlt::Direction::STILL;
+}
+
+std::string posToStr(hlt::Position _pos)
+{
+	return "{" + std::to_string(_pos.x) + "," + std::to_string(_pos.y) + "}";
+}
+
+std::string dirToStr(hlt::Direction _dir)
+{
+	switch (_dir)
+	{
+	case hlt::Direction::NORTH:
+		return "NORTH";
+		break;
+	case hlt::Direction::EAST:
+		return "EAST";
+		break;
+	case hlt::Direction::SOUTH:
+		return "SOUTH";
+		break;
+	case hlt::Direction::WEST:
+		return "WEST";
+		break;
+	case hlt::Direction::STILL:
+		return "STILL";
+		break;
+	default:
+		break;
+	}
 }
