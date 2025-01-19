@@ -13,6 +13,11 @@ float map(float smin, float smax, float val, float omin, float omax)
 	return (omax - omin) * percent + omin;
 }
 
+
+int random(int min, int max) {
+	return min + rand() / (RAND_MAX / (max - min + 1) + 1);
+}
+
 int diffNombreBateau(hlt::Game* _game, std::shared_ptr<hlt::Player> _player, hlt::Position* _center)
 {
 	int diff = 0;
@@ -25,6 +30,15 @@ int diffNombreBateau(hlt::Game* _game, std::shared_ptr<hlt::Player> _player, hlt
 		}
 	}
 
+	diff -= nombreEnemies(_game, _player, _center);
+
+	return diff;
+}
+
+int nombreEnemies(hlt::Game* _game, std::shared_ptr<hlt::Player> _player, hlt::Position* _center)
+{
+	int diff = 0;
+
 	for (std::shared_ptr<hlt::Player> player : _game->players)
 	{
 		if (player == _player)
@@ -34,9 +48,10 @@ int diffNombreBateau(hlt::Game* _game, std::shared_ptr<hlt::Player> _player, hlt
 		{
 			if (_game->game_map->calculate_distance(*_center, ship_pair.second->position) < DIFF_NOMBRE_BATEAU_RADIUS)
 			{
-				diff--;
+				diff++;
 			}
 		}
 	}
 
+	return diff;
 }

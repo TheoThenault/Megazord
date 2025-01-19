@@ -21,6 +21,11 @@ FSM_TRANSITION::~FSM_TRANSITION()
 
 float FSM_TRANSITION::Evaluate(void* data)
 {
+    //hlt::log::log("FSM_TRANSITION::Evaluate");
+
+    //if(TransitionCbk)
+        //hlt::log::log("FSM_TRANSITION : OUI");
+
     if (TransitionCbk)
         return TransitionCbk(data);
     return 0.f;
@@ -79,6 +84,7 @@ void FSM_STATE::InitTransitions(size_t count, ...) {
 }
 
 FSM_STATE* FSM_STATE::Evaluate(void* data) {
+    //hlt::log::log("FSM_STATE::Evaluate");
     float           bestTransitionScore = 0.f;
     FSM_TRANSITION* bestTransition = 0;
     for (size_t iTransition = 0; iTransition < TransitionsCount; ++iTransition) {
@@ -134,6 +140,7 @@ FSM::FSM(size_t count, ...) {
 };
 
 FSM_STATE* FSM::Evaluate(void* data) {
+    //hlt::log::log("FSM::Evaluate");
     if (!CurrentState) {
         if (!StatesCount)
             return 0;

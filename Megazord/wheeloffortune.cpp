@@ -1,4 +1,5 @@
 #include "wheeloffortune.hpp"
+#include "../hlt/log.hpp"
 
 Wheel::Wheel()
 {
@@ -29,10 +30,8 @@ std::string Wheel::roll()
 	for (auto& event_pair : m_events)
 	{
 		cumsum += event_pair.second;
-		if (dice < cumsum)
-		{
-			return event_pair.first;
-		}
+		if (dice < cumsum && cumsum > 0.0001f && event_pair.second > 0.0001f)
+				return event_pair.first;
 	}
-	return m_events[m_events.size()].first;
+	return "null";
 }

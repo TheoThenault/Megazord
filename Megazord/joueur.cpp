@@ -44,6 +44,22 @@ static void ruleCreateDropoff(void* _joueur)
 	}
 }
 
+static void ruleWatchoutWhenSpawning(void* _joueur)
+{
+	Joueur* joueur = (Joueur*)_joueur;
+
+	if (joueur->m_rule_engine->getDesire(DESIRE_SPAWNBOAT) == 1)
+	{
+		for (auto& ship_pair : joueur->m_player->ships)
+		{
+			if (ship_pair.second->position == joueur->m_player->shipyard->position)
+			{
+				joueur->m_rule_engine->setDesire(DESIRE_SPAWNBOAT, 0);
+			}
+		}
+	}
+}
+
 Joueur::Joueur(hlt::Game* _game) : m_game(_game)
 {
 	m_value = 0;
@@ -56,6 +72,7 @@ Joueur::Joueur(hlt::Game* _game) : m_game(_game)
 
 	m_rule_engine->addRule("ruleSpawnBoat", ruleSpawnBoat);
 	m_rule_engine->addRule("ruleCreateDropoff", ruleCreateDropoff);
+	m_rule_engine->addRule("ruleWatchoutWhenSpawning", ruleWatchoutWhenSpawning);
 }
 
 Joueur::~Joueur()
@@ -113,7 +130,7 @@ void Joueur::createDropoff()
 
 	if (best_index != -1)
 	{
-		if (m_expected_halite - COST_CREATE_DROPOFF > MIN_HALITE_THRESHOLD)
+		if (m_expected_halite - COST_CREATE_DROPOFF > PLAYER_MIN_HALITE_THRESHOLD)
 		{
 			m_command_queue->push_back(eligible_ships[best_index]->make_dropoff());
 			m_expected_halite -= COST_CREATE_DROPOFF;
@@ -126,7 +143,7 @@ void Joueur::createDropoff()
 
 void Joueur::spawnBoat()
 {
-	if (m_expected_halite - COST_SPAWN_BOAT > MIN_HALITE_THRESHOLD)
+	if (m_expected_halite - COST_SPAWN_BOAT > PLAYER_MIN_HALITE_THRESHOLD)
 	{
 		m_command_queue->push_back(m_player->shipyard->spawn());
 		m_expected_halite -= COST_SPAWN_BOAT;

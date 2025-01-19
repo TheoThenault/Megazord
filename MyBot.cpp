@@ -10,6 +10,8 @@
 #include "Megazord/joueur.hpp"
 #include "Megazord/bateau.hpp"
 #include "Megazord/fsm.hpp"
+#include "Megazord/utils.hpp"
+#include <string>
 
 using namespace std;
 using namespace hlt;
@@ -34,14 +36,20 @@ int main(int argc, char* argv[]) {
     // At this point "game" variable is populated with initial map data.
     // This is a good place to do computationally expensive start-up pre-processing.
     // As soon as you call "ready" function below, the 2 second per turn timer will start.
-    game.ready("Kayissa&Theo");
-
-    LOG("Bondour");
 
     Joueur joueur(&game);
 
     Bateau bateau(&game);
 
+    game.ready("Kayissa&Theo");
+
+    LOG("Bondour");
+
+    LOG(to_string(random(0, 3)));
+    LOG(to_string(random(0, 3)));
+    LOG(to_string(random(0, 3)));
+    LOG(to_string(random(0, 3)));
+    LOG(to_string(random(0, 3)));
 
     for (;;) {
         game.update_frame();
@@ -50,8 +58,9 @@ int main(int argc, char* argv[]) {
 
         vector<Command> command_queue;
 
-        joueur.setCommandQueue(&command_queue);
-        joueur.think(me);
+        LOG("HALITE " + to_string(me->halite));
+
+
 
         for (const auto& ship_iterator : me->ships) {
             shared_ptr<Ship> ship = ship_iterator.second;
@@ -62,8 +71,11 @@ int main(int argc, char* argv[]) {
             } else {
                 command_queue.push_back(ship->stay_still());
             }*/
-            bateau.decide(&command_queue, ship);
+            bateau.decide(&command_queue, ship, me);
         }
+
+        joueur.setCommandQueue(&command_queue);
+        joueur.think(me);
 
         //if (
         //    game.turn_number <= 200 &&

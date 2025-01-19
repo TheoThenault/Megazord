@@ -36,6 +36,7 @@ std::string Rules::infer()
 	Wheel wheel;
 	for (desire_t d : m_desires)
 	{
+		hlt::log::log("Desire " + d.first + " : " + std::to_string(d.second));
 		wheel.addEvent(d.first, d.second);
 	}
 
@@ -51,7 +52,12 @@ void Rules::addRule(std::string _name, void_function_voidp _func)
 
 void Rules::setDesire(std::string _name, float _val)
 {
-	m_desires.push_back({ _name, _val });
+	int index = getRawDesire(_name);
+	if (index == -1)
+		m_desires.push_back({ _name, _val });
+	else
+		m_desires[index].second = _val;
+
 
 	debugLog("{" + _name + ", " + std::to_string(_val) + "}");
 }
