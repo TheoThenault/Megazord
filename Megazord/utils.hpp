@@ -20,8 +20,8 @@ int nombreEnemies(hlt::Game*, std::shared_ptr<hlt::Player>, hlt::Position*);
 // On doit toujours avoir 1000 Halite
 #define PLAYER_MIN_HALITE_THRESHOLD 1000
 
-#define STORAGE_DISTANCE_CLOSE 5
-#define STORAGE_DISTANCE_FAR   10
+#define STORAGE_DISTANCE_CLOSE 6
+#define STORAGE_DISTANCE_FAR   12
 
 #define DIFF_NOMBRE_BATEAU_RADIUS 10
 

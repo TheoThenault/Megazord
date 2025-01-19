@@ -7,37 +7,32 @@
 #include "../hlt/log.hpp"
 #include "utils.hpp"
 
-
-
-Bateau::Bateau(hlt::Game* _game)
+Bateau::Bateau(hlt::Game* _game, std::shared_ptr<hlt::Player> _player, std::shared_ptr <hlt::Ship> _ship)
 {
-	ship = nullptr;
-
-	m_game = _game;
+	m_game		= _game;
+	m_player	= _player;
+	m_ship		= _ship;
 
 	setupStateMachine();
-
-	hlt::log::log("BONDOUR bateau");
 };
 
 Bateau::~Bateau()
 {
 	delete m_state_machine;
-	hlt::log::log("AUREVOIE bateau");
 };
 
 float transRamasserHaliteToMoveToHalite(void* _data)
 {
 	Bateau* bateau = (Bateau*)_data;
 
-	if(bateau->ship != nullptr)
+	if(bateau->m_ship != nullptr)
 
-	if (bateau->m_game->game_map->at(bateau->ship)->halite < 350) {
-		hlt::log::log(std::to_string(bateau->ship->id) + " transRamasserHaliteToMoveToHalite 1");
+	if (bateau->m_game->game_map->at(bateau->m_ship)->halite < MINE_HALITE_THRESHOLD) {
+		hlt::log::log(std::to_string(bateau->m_ship->id) + " transRamasserHaliteToMoveToHalite 1");
 		return 1;
 	}
 	else {
-		hlt::log::log(std::to_string(bateau->ship->id) + " transRamasserHaliteToMoveToHalite 0");
+		hlt::log::log(std::to_string(bateau->m_ship->id) + " transRamasserHaliteToMoveToHalite 0");
 		return 0;
 	}
 }
@@ -46,11 +41,11 @@ float transRamasserHaliteToMoveToStorage(void* _data)
 {
 	Bateau* bateau = (Bateau*)_data;
 
-	int halite_in_ship = bateau->ship->halite;
+	int halite_in_ship = bateau->m_ship->halite;
 	float cargaison = halite_in_ship / ((float)MAX_HALITE_IN_SHIP);
 
 	int closest_storage_distance = bateau->m_game->game_map->calculate_distance(
-		bateau->ship->position, bateau->m_player->shipyard->position
+		bateau->m_ship->position, bateau->m_player->shipyard->position
 	);
 	hlt::Position closest_storage = bateau->m_player->shipyard->position;
 
@@ -58,7 +53,7 @@ float transRamasserHaliteToMoveToStorage(void* _data)
 	{
 		std::shared_ptr<hlt::Dropoff> dropoff = dropoff_pair.second;
 		int distance = bateau->m_game->game_map->calculate_distance(
-			bateau->ship->position, dropoff->position
+			bateau->m_ship->position, dropoff->position
 		);
 
 		if (distance < closest_storage_distance)
@@ -81,10 +76,10 @@ float transRamasserHaliteToMoveToStorage(void* _data)
 	//if (fuzzy_logic > 0.7f)
 	if (cargaison > 0.7f)
 	{
-		hlt::log::log(std::to_string(bateau->ship->id) + " transRamasserHaliteToMoveToStorage 1");
+		hlt::log::log(std::to_string(bateau->m_ship->id) + " transRamasserHaliteToMoveToStorage 1");
 		return 1;
 	}
-	hlt::log::log(std::to_string(bateau->ship->id) + " transRamasserHaliteToMoveToStorage 0");
+	hlt::log::log(std::to_string(bateau->m_ship->id) + " transRamasserHaliteToMoveToStorage 0");
 	return 0;
 }
 
@@ -92,13 +87,13 @@ float transMoveToHaliteToRamasserHalite(void* _data)
 {
 	Bateau* bateau = (Bateau*)_data;
 
-	if (bateau->m_game->game_map->at(bateau->ship)->halite >= MINE_HALITE_THRESHOLD)
+	if (bateau->m_game->game_map->at(bateau->m_ship)->halite >= MINE_HALITE_THRESHOLD)
 	{
-		hlt::log::log(std::to_string(bateau->ship->id) + " transMoveToHaliteToRamasserHalite 1");
+		hlt::log::log(std::to_string(bateau->m_ship->id) + " transMoveToHaliteToRamasserHalite 1");
 		return 1;
 	}
 	else {
-		hlt::log::log(std::to_string(bateau->ship->id) + " transMoveToHaliteToRamasserHalite 0");
+		hlt::log::log(std::to_string(bateau->m_ship->id) + " transMoveToHaliteToRamasserHalite 0");
 		return 0;
 	}
 }
@@ -107,12 +102,12 @@ float transMoveToStorageToMoveToHalites(void* _data)
 {
 	Bateau* bateau = (Bateau*)_data;
 
-	if (bateau->ship->halite == 0) {
-		hlt::log::log(std::to_string(bateau->ship->id) + " transMoveToStorageToMoveToHalites 1");
+	if (bateau->m_ship->halite == 0) {
+		hlt::log::log(std::to_string(bateau->m_ship->id) + " transMoveToStorageToMoveToHalites 1");
 		return 1;
 	}
 	else {
-		hlt::log::log(std::to_string(bateau->ship->id) + " transMoveToStorageToMoveToHalites 0");
+		hlt::log::log(std::to_string(bateau->m_ship->id) + " transMoveToStorageToMoveToHalites 0");
 		return 0;
 	}
 }
@@ -122,7 +117,7 @@ float transAttackEnemie(void* _data)
 
 	Bateau* bateau = (Bateau*)_data;
 
-	int halite_in_ship = bateau->ship->halite;
+	int halite_in_ship = bateau->m_ship->halite;
 	float cargaison = halite_in_ship / ((float)MAX_HALITE_IN_SHIP);
 
 	//decide which enemie TODO: choose the best one 
@@ -138,7 +133,7 @@ float transAttackEnemie(void* _data)
 		for (auto& ship_pair : player->ships)
 		{
 			int distance = bateau->m_game->game_map->calculate_distance(
-				bateau->ship->position, ship_pair.second->position
+				bateau->m_ship->position, ship_pair.second->position
 			);
 
 			if (distance < closest_enemie_distance && distance < ENEMIE_SEARCH_RADIUS)
@@ -154,13 +149,13 @@ float transAttackEnemie(void* _data)
 
 	float cargaison_enemie = closest_enemie_halite / ((float)MAX_HALITE_IN_SHIP);
 
-	int threatened = diffNombreBateau(bateau->m_game, bateau->m_player, &(bateau->ship->position)) < DIFF_NOMBRE_BATEAU_THREAT_THRESHOLD;
+	int threatened = diffNombreBateau(bateau->m_game, bateau->m_player, &(bateau->m_ship->position)) < DIFF_NOMBRE_BATEAU_THREAT_THRESHOLD;
 
 	if (((1-threatened) * cargaison_enemie * 1/cargaison) > 0.5f) {
-		hlt::log::log(std::to_string(bateau->ship->id) + " transAttackEnemie 1");
+		hlt::log::log(std::to_string(bateau->m_ship->id) + " transAttackEnemie 1");
 		return 1.0f;
 	}
-	hlt::log::log(std::to_string(bateau->ship->id) + " transAttackEnemie 0");
+	hlt::log::log(std::to_string(bateau->m_ship->id) + " transAttackEnemie 0");
 	return 0;
 }
 
@@ -173,7 +168,7 @@ float transFlee(void* _data)
 	// TODO : Nearest dropoff en une fonction
 
 	int closest_storage_distance = bateau->m_game->game_map->calculate_distance(
-		bateau->ship->position, bateau->m_player->shipyard->position
+		bateau->m_ship->position, bateau->m_player->shipyard->position
 	);
 	hlt::Position closest_storage = bateau->m_player->shipyard->position;
 
@@ -181,7 +176,7 @@ float transFlee(void* _data)
 	{
 		std::shared_ptr<hlt::Dropoff> dropoff = dropoff_pair.second;
 		int distance = bateau->m_game->game_map->calculate_distance(
-			bateau->ship->position, dropoff->position
+			bateau->m_ship->position, dropoff->position
 		);
 
 		if (distance < closest_storage_distance)
@@ -193,12 +188,12 @@ float transFlee(void* _data)
 	
 	bateau->m_target_storage = closest_storage;
 
-	if (diffNombreBateau(bateau->m_game, bateau->m_player, &(bateau->ship->position)) < 0) {
-		hlt::log::log(std::to_string(bateau->ship->id) + " transFlee 1");
+	if (diffNombreBateau(bateau->m_game, bateau->m_player, &(bateau->m_ship->position)) < 0) {
+		hlt::log::log(std::to_string(bateau->m_ship->id) + " transFlee 1");
 		return 1;
 	}
 	else {
-		hlt::log::log(std::to_string(bateau->ship->id) + " transFlee 0");
+		hlt::log::log(std::to_string(bateau->m_ship->id) + " transFlee 0");
 		return 0;
 	}
 }
@@ -207,7 +202,7 @@ float returnHome(void* _data)
 {
 	Bateau* bateau = (Bateau*)_data;
 
-	int nbEnemie = nombreEnemies(bateau->m_game, bateau->m_player, &(bateau->ship->position));
+	int nbEnemie = nombreEnemies(bateau->m_game, bateau->m_player, &(bateau->m_ship->position));
 
 	if (nbEnemie == 0)
 	{
@@ -236,7 +231,6 @@ void wrpMoveToTarget(void* _data)
 	Bateau* bateau = (Bateau*)_data;
 	bateau->moveToTarget();
 }
-
 
 void Bateau::setupStateMachine()
 {
@@ -295,13 +289,11 @@ void Bateau::setupStateMachine()
 	);
 };
 
-void Bateau::decide(std::vector <hlt::Command>* _command_queue, std::shared_ptr <hlt::Ship> _ship, std::shared_ptr<hlt::Player> _player)
+void Bateau::decide(std::vector <hlt::Command>* _command_queue)
 {
-	ship = _ship;
 	command_queue = _command_queue;
-	m_player = _player;
 
-	hlt::log::log(std::to_string(ship->id) + " " + debug_lastState);
+	hlt::log::log("BEFOR " + std::to_string(m_ship->id) + " " + debug_lastState);
 
 	//hlt::log::log(std::to_string(ship->id) + " Evaluate");
 	m_state_machine->Evaluate(this);
@@ -311,20 +303,18 @@ void Bateau::decide(std::vector <hlt::Command>* _command_queue, std::shared_ptr 
 
 };
 
-//TODO: mark unsafe the cells the ship will be on next turn to avoid collisions
-
 void Bateau::collectHalites()
 {
-	hlt::log::log(std::to_string(ship->id) + " COLLECT HALITES");
+	hlt::log::log("AFTER " + std::to_string(m_ship->id) + " COLLECT HALITES");
 	debug_lastState = "COLLECT HALITES";
 	
-	m_game->game_map->at(ship->position)->mark_unsafe(ship);
-	command_queue->push_back(ship->stay_still());
+	m_game->game_map->at(m_ship->position)->mark_unsafe(m_ship);
+	command_queue->push_back(m_ship->stay_still());
 };
 
 void Bateau::moveToHalites()
 {
-	hlt::log::log(std::to_string(ship->id) + " MOVE TO HALITES");
+	hlt::log::log("AFTER " + std::to_string(m_ship->id) + " MOVE TO HALITES");
 	debug_lastState = "MOVE TO HALITES";
 	
 	hlt::Direction best_direction = hlt::Direction::STILL;
@@ -332,8 +322,8 @@ void Bateau::moveToHalites()
 
 	for (unsigned int index_dir = 0; index_dir < 4; index_dir++)
 	{
-		hlt::Halite direction_halite = m_game->game_map->at(ship->position.directional_offset(hlt::ALL_CARDINALS[index_dir]))->halite;
-		bool unsafe = m_game->game_map->at(ship->position.directional_offset(hlt::ALL_CARDINALS[index_dir]))->is_occupied();
+		hlt::Halite direction_halite = m_game->game_map->at(m_ship->position.directional_offset(hlt::ALL_CARDINALS[index_dir]))->halite;
+		bool unsafe = m_game->game_map->at(m_ship->position.directional_offset(hlt::ALL_CARDINALS[index_dir]))->is_occupied();
 
 		if (direction_halite > best_direction_halite && !unsafe)
 		{
@@ -342,35 +332,46 @@ void Bateau::moveToHalites()
 		}
 	}
 
-	m_game->game_map->at(ship->position.directional_offset(best_direction))->mark_unsafe(ship);
-	command_queue->push_back(ship->move(best_direction));
+	m_game->game_map->at(m_ship->position.directional_offset(best_direction))->mark_unsafe(m_ship);
+	command_queue->push_back(m_ship->move(best_direction));
 };
 
 void Bateau::moveToTarget()
 {
 	if (m_current_state == m_state_move_to_enemie)
 	{
-		hlt::log::log(std::to_string(ship->id) + " MOVE TO ENEMIE");
+		hlt::log::log("AFTER " + std::to_string(m_ship->id) + " MOVE TO ENEMIE");
 		debug_lastState = "MOVE TO ENEMIE";
 
-		hlt::Direction dir = m_game->game_map->naive_navigate(ship, m_target_enemie);
+		hlt::Direction dir = m_game->game_map->naive_navigate(m_ship, m_target_enemie);
 
 		if(dir == hlt::Direction::STILL)
-			m_game->game_map->at(ship->position)->mark_unsafe(ship);
+			m_game->game_map->at(m_ship->position)->mark_unsafe(m_ship);
 
-		command_queue->push_back(ship->move(dir));
+		command_queue->push_back(m_ship->move(dir));
 	}
 	if (m_current_state == m_state_move_to_storage)
 	{
-		hlt::log::log(std::to_string(ship->id) + " MOVE TO STORAGE");
+		hlt::log::log("AFTER " + std::to_string(m_ship->id) + " MOVE TO STORAGE");
 		debug_lastState = "MOVE TO STORAGE";
 
-		hlt::Direction dir = m_game->game_map->naive_navigate(ship, m_target_storage);
+		hlt::Direction dir = m_game->game_map->naive_navigate(m_ship, m_target_storage);
 
 		if (dir == hlt::Direction::STILL)
-			m_game->game_map->at(ship->position)->mark_unsafe(ship);
+			m_game->game_map->at(m_ship->position)->mark_unsafe(m_ship);
 
-		command_queue->push_back(ship->move(dir));
+		command_queue->push_back(m_ship->move(dir));
 	}
 	
 };
+
+int shipIndex(std::vector<Bateau*>* _bateaux, std::shared_ptr<hlt::Ship> _ship)
+{
+	for (unsigned int i = 0; i < _bateaux->size(); i++)
+	{
+		Bateau* bateau = (*_bateaux)[i];
+		if (bateau->m_ship == _ship)
+			return i;
+	}
+	return -1;
+}

@@ -39,17 +39,9 @@ int main(int argc, char* argv[]) {
 
     Joueur joueur(&game);
 
-    Bateau bateau(&game);
+    std::vector<Bateau*> bateaux;
 
     game.ready("Kayissa&Theo");
-
-    LOG("Bondour");
-
-    LOG(to_string(random(0, 3)));
-    LOG(to_string(random(0, 3)));
-    LOG(to_string(random(0, 3)));
-    LOG(to_string(random(0, 3)));
-    LOG(to_string(random(0, 3)));
 
     for (;;) {
         game.update_frame();
@@ -64,14 +56,24 @@ int main(int argc, char* argv[]) {
 
         for (const auto& ship_iterator : me->ships) {
             shared_ptr<Ship> ship = ship_iterator.second;
-            
+
             /*if (game_map->at(ship)->halite < constants::MAX_HALITE / 10 || ship->is_full()) {
                 Direction random_direction = ALL_CARDINALS[rng() % 4];
                 command_queue.push_back(ship->move(random_direction));
             } else {
                 command_queue.push_back(ship->stay_still());
             }*/
-            bateau.decide(&command_queue, ship, me);
+
+            int ship_index = shipIndex(&bateaux, ship);
+            if (ship_index == -1)
+            {
+                Bateau* bateau = new Bateau(&game, me, ship);
+                bateau->decide(&command_queue);
+            }
+            else {
+                bateaux[ship_index]->decide(&command_queue);
+            }
+
         }
 
         joueur.setCommandQueue(&command_queue);
