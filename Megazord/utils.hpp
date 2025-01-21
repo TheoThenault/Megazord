@@ -30,6 +30,8 @@ std::string dirToStr(hlt::Direction);
 // On doit toujours avoir 1000 Halite
 #define PLAYER_MIN_HALITE_THRESHOLD 1000
 
+#define MAX_AMOUNT_OF_BOAT 10
+
 #define STORAGE_DISTANCE_CLOSE 10
 #define STORAGE_DISTANCE_FAR  30
 
@@ -45,6 +47,8 @@ std::string dirToStr(hlt::Direction);
 
 #define MINE_HALITE_THRESHOLD 250
 #define KEEP_HARVESTING_THRESHOLD 50
+
+#define DISTANCE_BETWEEN_STORAGE 15
 
 // GAME CONSTANTS
 #define MAX_TURN_NUMBER 500

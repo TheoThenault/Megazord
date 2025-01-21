@@ -254,7 +254,7 @@ float transKeepRamasser(void* _data)
 
 	float v = (halite_under_ship - KEEP_HARVESTING_THRESHOLD) / ((MAX_NATURAL_HALITE - KEEP_HARVESTING_THRESHOLD) * 1.0f);
 	LOG(std::to_string(bateau->ship->id) + " keepRamasser " + std::to_string(v) + " (" + std::to_string(halite_under_ship) + ")");
-	return v * 2.5f;
+	return v * 2.5f; // on a très envie de ramasser des halites
 }
 
 float transKeepMovingToHalite(void* _data)
@@ -451,7 +451,7 @@ void Bateau::moveToHalites()
 					m_game->game_map->calculate_distance(ship->position, best_halite_position) <
 					m_game->game_map->calculate_distance(ship->position, { lookup_x, lookup_y })
 					)
-				{
+				{	
 					continue;
 				}
 				best_halite = m_game->game_map->at({ lookup_x, lookup_y })->halite;
@@ -484,9 +484,30 @@ void Bateau::moveToTarget()
 
 		hlt::Direction dir = m_game->game_map->naive_navigate(ship, m_target_enemie);
 
-		if(dir == hlt::Direction::STILL)
-			m_game->game_map->at(ship->position)->mark_unsafe(ship);
+		if (dir == hlt::Direction::STILL) {
 
+			if (m_game->game_map->calculate_distance(ship->position, m_target_enemie) == 1)
+			{
+				std::shared_ptr<hlt::Ship> ship_at = m_game->game_map->at(m_target_enemie)->ship;
+				if (ship_at != nullptr)
+				{
+					if (ship_at->owner != m_player->id)
+					{
+						m_game->game_map->at(m_target_enemie)->mark_unsafe(ship);
+
+						if (m_target_enemie.x < ship->position.x)
+							command_queue->push_back(ship->move(hlt::Direction::WEST));
+						if (m_target_enemie.x > ship->position.x)
+							command_queue->push_back(ship->move(hlt::Direction::EAST));
+						if (m_target_enemie.y < ship->position.y)
+							command_queue->push_back(ship->move(hlt::Direction::NORTH));
+						if (m_target_enemie.y > ship->position.y)
+							command_queue->push_back(ship->move(hlt::Direction::SOUTH));
+						return;
+					}
+				}
+			}
+		}
 		command_queue->push_back(ship->move(dir));
 	}
 	if (m_current_state == m_state_move_to_storage)
@@ -507,7 +528,6 @@ void Bateau::moveToTarget()
 void Bateau::transformDropoff()
 {
 	command_queue->push_back(ship->make_dropoff());
-	m_joueur->boatAboutToTransform = -1;
 	hlt::log::log("Create dropoff!");
 }
 

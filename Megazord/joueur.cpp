@@ -18,7 +18,7 @@ static void ruleSpawnBoat(void* _joueur)
 	}
 	else if (joueur->m_game->turn_number < MAX_TURN_NUMBER * (3 / 4))
 	{
-		if (joueur->m_player->halite > COST_CREATE_DROPOFF + PLAYER_MIN_HALITE_THRESHOLD)
+		if (joueur->m_player->halite > COST_CREATE_DROPOFF + PLAYER_MIN_HALITE_THRESHOLD + COST_SPAWN_BOAT)
 		{
 			joueur->m_rule_engine->setDesire(DESIRE_SPAWNBOAT, 1);
 		}
@@ -72,6 +72,16 @@ static void ruleWatchoutWhenSpawning(void* _joueur)
 	}
 }
 
+static void ruleCapSpawnBoat(void* _joueur)
+{
+	Joueur* joueur = (Joueur*)_joueur;
+
+	if (joueur->m_player->ships.size() >= MAX_AMOUNT_OF_BOAT)
+	{
+		joueur->m_rule_engine->setDesire(DESIRE_SPAWNBOAT, 0);
+	}
+}
+
 Joueur::Joueur(hlt::Game* _game) : m_game(_game)
 {
 	m_value = 0;
@@ -85,6 +95,7 @@ Joueur::Joueur(hlt::Game* _game) : m_game(_game)
 	m_rule_engine->addRule("ruleSpawnBoat", ruleSpawnBoat);
 	m_rule_engine->addRule("ruleCreateDropoff", ruleCreateDropoff);
 	m_rule_engine->addRule("ruleWatchoutWhenSpawning", ruleWatchoutWhenSpawning);
+	m_rule_engine->addRule("ruleCapSpawnBoat", ruleCapSpawnBoat);
 }
 
 Joueur::~Joueur()
@@ -103,6 +114,12 @@ void Joueur::think(std::shared_ptr<hlt::Player> _player)
 
 	m_expected_halite = m_player->halite;
 
+	if (boatAboutToTransform != -1)
+	{
+		m_expected_halite -= COST_CREATE_DROPOFF;
+		boatAboutToTransform = -1;
+	}
+
 	std::string action = m_rule_engine->infer();
 
 	if (action == DESIRE_SPAWNBOAT)
@@ -120,6 +137,13 @@ void Joueur::createDropoff()
 {
 	// TODO : Improve the choice of the best ship
 
+	std::vector<hlt::Position> structure_pos;
+	structure_pos.push_back(m_player->shipyard->position);
+	for (const auto& dropoff_pair : m_player->dropoffs)
+	{
+		structure_pos.push_back(dropoff_pair.second->position);
+	}
+
 	std::vector<std::shared_ptr<hlt::Ship>> eligible_ships;
 	int best_halite = 0;
 	size_t best_index = -1;
@@ -130,11 +154,24 @@ void Joueur::createDropoff()
 
 		if (halite > SHIP_TRANSFORM_INTO_DROPOFF)
 		{
-			eligible_ships.push_back(id_ship_pair.second);
-			if (halite > best_halite)
+			bool far_enough = true;
+			for (const hlt::Position& pos : structure_pos)
 			{
-				best_halite = halite;
-				best_index = eligible_ships.size() - 1;
+				int distance = m_game->game_map->calculate_distance(
+					id_ship_pair.second->position, pos
+				);
+				if (distance < DISTANCE_BETWEEN_STORAGE)
+					far_enough = false;
+			}
+
+			if (far_enough)
+			{
+				eligible_ships.push_back(id_ship_pair.second);
+				if (halite > best_halite)
+				{
+					best_halite = halite;
+					best_index = eligible_ships.size() - 1;
+				}
 			}
 		}
 	}
