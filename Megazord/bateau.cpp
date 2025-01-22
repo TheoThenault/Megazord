@@ -194,7 +194,6 @@ float transFlee(void* _data)
 
 	hlt::Position closest_enemie = { 0, 0 };
 	int closest_enemie_distance = 1000;
-	int closest_enemie_halite = 0;
 	for (auto& player : bateau->m_game->players)
 	{
 		if (player == bateau->m_player)
@@ -210,7 +209,6 @@ float transFlee(void* _data)
 			{
 				closest_enemie_distance = distance;
 				closest_enemie = ship_pair.second->position;
-				closest_enemie_halite = ship_pair.second->halite;
 			}
 		}
 	}
