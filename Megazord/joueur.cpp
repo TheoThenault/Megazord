@@ -29,13 +29,9 @@ static void ruleCreateDropoff(void* _joueur)
 {
 	Joueur* joueur = (Joueur*)_joueur;
 
-	LOG(std::to_string(joueur->m_player->halite > COST_CREATE_DROPOFF));
-	LOG(std::to_string(joueur->m_game->turn_number < MAX_TURN_NUMBER * (3 / 4)));
-
 	if (joueur->m_player->halite > COST_CREATE_DROPOFF && 
 		joueur->m_game->turn_number < MAX_TURN_NUMBER * (3 / 4.0f))
 	{
-		LOG("CREATE DROPOFF ?.??");
 		for (auto& id_ship_pair : joueur->m_player->ships)
 		{
 			int halite = joueur->m_game->game_map->at(id_ship_pair.second)->halite;
@@ -181,7 +177,7 @@ void Joueur::createDropoff()
 		if (m_expected_halite - COST_CREATE_DROPOFF > PLAYER_MIN_HALITE_THRESHOLD)
 		{
 			boatAboutToTransform = eligible_ships[best_index]->id;
-			hlt::log::log("ABOUT TO CREATE DROPOFF");
+			LOG("ABOUT TO CREATE DROPOFF");
 		}
 	}
 	
@@ -194,6 +190,6 @@ void Joueur::spawnBoat()
 	{
 		m_command_queue->push_back(m_player->shipyard->spawn());
 		m_expected_halite -= COST_SPAWN_BOAT;
-		hlt::log::log("Spawn boat!");
+		LOG("Spawn boat!");
 	}
 }

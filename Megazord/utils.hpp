@@ -9,9 +9,9 @@
 
 typedef void(*void_function_void)();
 
-float map(float smin, float smax, float val, float omin, float omax);
+float map(float, float, float, float, float);
 
-int random(int min, int max);
+int random(int, int);
 
 int diffNombreBateau(hlt::Game*, std::shared_ptr<hlt::Player>, hlt::Position*);
 int nombreEnemies(hlt::Game*, std::shared_ptr<hlt::Player>, hlt::Position*);
@@ -27,6 +27,7 @@ std::string dirToStr(hlt::Direction);
 # define LOG(X)
 #endif // DEBUG
 
+// BOT CONSTANTS
 // On doit toujours avoir 1000 Halite
 #define PLAYER_MIN_HALITE_THRESHOLD 1000
 

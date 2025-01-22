@@ -7,18 +7,18 @@
 #include <iostream>
 
 /*
-	Transforme une valeur `val` présente entre `smin` et `smax` et la retourne
-	présente entre `omin` et `omax`
+	Transforme une valeur `val` prÃ©sente entre `smin` et `smax` et la retourne
+	prÃ©sente entre `omin` et `omax`
 */
-float map(float smin, float smax, float val, float omin, float omax)
+float map(float _smin, float _smax, float _val, float _omin, float _omax)
 {
-	float percent = (val - smin) / (smax - smin);
-	return (omax - omin) * percent + omin;
+	float percent = (_val - _smin) / (_smax - _smin);
+	return (_omax - _omin) * percent + _omin;
 }
 
 
-int random(int min, int max) {
-	return min + rand() / (RAND_MAX / (max - min + 1) + 1);
+int random(int _min, int _max) {
+	return _min + rand() / (RAND_MAX / (_max - _min + 1) + 1);
 }
 
 int diffNombreBateau(hlt::Game* _game, std::shared_ptr<hlt::Player> _player, hlt::Position* _center)

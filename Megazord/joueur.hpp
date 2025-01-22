@@ -6,7 +6,7 @@
 #include <map>
 
 /*
-	Classe spécifique pour les comportement du "joueur"
+	Classe spï¿½cifique pour les comportement du "joueur"
 */
 
 class Joueur {
