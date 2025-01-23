@@ -2,12 +2,13 @@
 #include <string>
 #include <vector>
 /*
-	Classe générique pour les roues de la fortune
+	Classe gÃ©nÃ©rique pour les roues de la fortune
 */
 
 class Wheel {
 public:
 	Wheel();
+
 	~Wheel();
 
 	void addEvent(std::string, float);

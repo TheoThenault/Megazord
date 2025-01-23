@@ -6,306 +6,7 @@
 #include "../hlt/constants.hpp"
 #include "../hlt/log.hpp"
 #include "utils.hpp"
-
-Bateau::Bateau(hlt::Game* _game, std::shared_ptr<hlt::Player> _player, Joueur* _joueur, hlt::EntityId _id)
-{
-	m_game		= _game;
-	m_player	= _player;
-	m_ship_id	= _id;
-	m_joueur	= _joueur;
-
-	setupStateMachine();
-};
-
-Bateau::~Bateau()
-{
-	delete m_state_machine;
-};
-
-float transRamasserHaliteToMoveToHalite(void* _data)
-{
-	Bateau* bateau = (Bateau*)_data;
-
-	if (bateau->m_game->game_map->at(bateau->ship)->halite < MINE_HALITE_THRESHOLD && 
-		bateau->ship->halite < SHIP_FULL
-		) {
-		LOG(std::to_string(bateau->ship->id) + " transRamasserHaliteToMoveToHalite 1");
-		return 1.0f;
-	}
-	LOG(std::to_string(bateau->ship->id) + " transRamasserHaliteToMoveToHalite 0.3");
-	return 0.2f;
-}
-
-float transRamasserHaliteToMoveToStorage(void* _data)
-{
-	Bateau* bateau = (Bateau*)_data;
-
-	int halite_in_ship = bateau->ship->halite;
-	float cargaison = halite_in_ship / ((float)MAX_HALITE_IN_SHIP);
-
-	int closest_storage_distance = bateau->m_game->game_map->calculate_distance(
-		bateau->ship->position, bateau->m_player->shipyard->position
-	);
-	hlt::Position closest_storage = bateau->m_player->shipyard->position;
-
-	for (auto& dropoff_pair : bateau->m_player->dropoffs)
-	{
-		std::shared_ptr<hlt::Dropoff> dropoff = dropoff_pair.second;
-		int distance = bateau->m_game->game_map->calculate_distance(
-			bateau->ship->position, dropoff->position
-		);
-
-		if (distance < closest_storage_distance)
-		{
-			closest_storage_distance = distance;
-			closest_storage = dropoff->position;
-		}
-	}
-	
-	float distance_coeff = map(
-		STORAGE_DISTANCE_CLOSE, STORAGE_DISTANCE_FAR,
-		closest_storage_distance * 1.0f, 1.0f, 0.5f
-	);
-
-	float fuzzy_logic = cargaison * distance_coeff;
-
-	bateau->m_target_storage = closest_storage;
-
-	// TODO : Envoyer directement la logique floue ?
-	//if (fuzzy_logic > 0.7f)
-
-	LOG(std::to_string(bateau->ship->id) + " transRamasserHaliteToMoveToStorage " + std::to_string(fuzzy_logic)
-		+ "(" + std::to_string(cargaison) + "/" + std::to_string(distance_coeff) + ")");
-	return fuzzy_logic;
-
-	//if (cargaison > 0.7f)
-	//{
-	//	hlt::log::log(std::to_string(bateau->ship->id) + " transRamasserHaliteToMoveToStorage 1");
-	//	return 1;
-	//}
-	LOG(std::to_string(bateau->ship->id) + " transRamasserHaliteToMoveToStorage 0");
-	//return 0;
-}
-
-float transMoveToHaliteToRamasserHalite(void* _data)
-{
-	Bateau* bateau = (Bateau*)_data;
-
-	if (bateau->m_game->game_map->at(bateau->ship)->halite >= MINE_HALITE_THRESHOLD)
-	{
-		LOG(std::to_string(bateau->ship->id) + " transMoveToHaliteToRamasserHalite 1");
-		return 1;
-	}
-	else {
-		LOG(std::to_string(bateau->ship->id) + " transMoveToHaliteToRamasserHalite 0");
-		return 0;
-	}
-}
-
-float transMoveToStorageToMoveToHalites(void* _data)
-{
-	Bateau* bateau = (Bateau*)_data;
-
-	if (bateau->ship->halite == 0) {
-		LOG(std::to_string(bateau->ship->id) + " transMoveToStorageToMoveToHalites 1");
-		return 1;
-	}
-	else {
-		LOG(std::to_string(bateau->ship->id) + " transMoveToStorageToMoveToHalites 0");
-		return 0;
-	}
-}
-
-float transAttackEnemie(void* _data)
-{
-
-	Bateau* bateau = (Bateau*)_data;
-
-	int halite_in_ship = bateau->ship->halite;
-	float cargaison = halite_in_ship / ((float)MAX_HALITE_IN_SHIP);
-
-	//decide which enemie TODO: choose the best one 
-
-	hlt::Position closest_enemie = { 0, 0 };
-	int closest_enemie_distance = 1000;
-	int closest_enemie_halite = 0;
-	for (auto& player : bateau->m_game->players)
-	{
-		if (player == bateau->m_player)
-			continue;
-
-		for (auto& ship_pair : player->ships)
-		{
-			int distance = bateau->m_game->game_map->calculate_distance(
-				bateau->ship->position, ship_pair.second->position
-			);
-
-			if (distance < closest_enemie_distance && distance < ENEMIE_SEARCH_RADIUS)
-			{
-				closest_enemie_distance = distance;
-				closest_enemie = ship_pair.second->position;
-				closest_enemie_halite = ship_pair.second->halite;
-			}
-		}
-	}
-
-	bateau->m_target_enemie = closest_enemie;
-
-	float cargaison_enemie = closest_enemie_halite / ((float)MAX_HALITE_IN_SHIP);
-
-	int threatened = diffNombreBateau(bateau->m_game, bateau->m_player, &(bateau->ship->position)) < DIFF_NOMBRE_BATEAU_THREAT_THRESHOLD;
-
-	if (((1-threatened) * cargaison_enemie * 1/cargaison) > 0.5f) {
-		LOG(std::to_string(bateau->ship->id) + " transAttackEnemie 1");
-		return 1.0f;
-	}
-	LOG(std::to_string(bateau->ship->id) + " transAttackEnemie 0");
-	return 0;
-}
-
-float transFlee(void* _data)
-{
-	//TODO c'est un peu bête il faudrait un vrai état de fuite pour pouvoir en sortir si on est hors de danger
-	// remarque : on ne distingue pas les 3 enemies
-	Bateau* bateau = (Bateau*)_data;
-
-	// TODO : Nearest dropoff en une fonction
-
-	int closest_storage_distance = bateau->m_game->game_map->calculate_distance(
-		bateau->ship->position, bateau->m_player->shipyard->position
-	);
-	hlt::Position closest_storage = bateau->m_player->shipyard->position;
-
-	for (auto& dropoff_pair : bateau->m_player->dropoffs)
-	{
-		std::shared_ptr<hlt::Dropoff> dropoff = dropoff_pair.second;
-		int distance = bateau->m_game->game_map->calculate_distance(
-			bateau->ship->position, dropoff->position
-		);
-
-		if (distance < closest_storage_distance)
-		{
-			closest_storage_distance = distance;
-			closest_storage = dropoff->position;
-		}
-	}
-	
-	bateau->m_target_storage = closest_storage;
-
-	hlt::Position closest_enemie = { 0, 0 };
-	int closest_enemie_distance = 1000;
-	int closest_enemie_halite = 0;
-	for (auto& player : bateau->m_game->players)
-	{
-		if (player == bateau->m_player)
-			continue;
-
-		for (auto& ship_pair : player->ships)
-		{
-			int distance = bateau->m_game->game_map->calculate_distance(
-				bateau->ship->position, ship_pair.second->position
-			);
-
-			if (distance < closest_enemie_distance && distance < ENEMIE_SEARCH_RADIUS)
-			{
-				closest_enemie_distance = distance;
-				closest_enemie = ship_pair.second->position;
-				closest_enemie_halite = ship_pair.second->halite;
-			}
-		}
-	}
-
-	bateau->m_target_enemie = closest_enemie;
-
-
-	if (diffNombreBateau(bateau->m_game, bateau->m_player, &(bateau->ship->position)) < 0) {
-		LOG(std::to_string(bateau->ship->id) + " transFlee 1");
-		return 1;
-	}
-	LOG(std::to_string(bateau->ship->id) + " transFlee 0");
-	return 0;
-}
-
-float returnHome(void* _data)
-{
-	Bateau* bateau = (Bateau*)_data;
-
-	int nbEnemie = nombreEnemies(bateau->m_game, bateau->m_player, &(bateau->ship->position));
-
-	if (nbEnemie == 0)
-	{
-		LOG(std::to_string(bateau->ship->id) + " RETURNHOME 1");
-		return 1;
-	}
-	LOG(std::to_string(bateau->ship->id) + " RETURNHOME 0");
-	return 0;
-}
-
-float transKeepRamasser(void* _data)
-{
-	Bateau* bateau = (Bateau*)_data;
-
-	if (bateau->ship->halite >= SHIP_FULL)
-	{
-		return 0;
-	}
-
-	hlt::Halite halite_under_ship = bateau->m_game->game_map->at(bateau->ship->position)->halite;
-
-	float v = (halite_under_ship - KEEP_HARVESTING_THRESHOLD) / ((MAX_NATURAL_HALITE - KEEP_HARVESTING_THRESHOLD) * 1.0f);
-	LOG(std::to_string(bateau->ship->id) + " keepRamasser " + std::to_string(v) + " (" + std::to_string(halite_under_ship) + ")");
-	return v * 2.5f; // on a très envie de ramasser des halites
-}
-
-float transKeepMovingToHalite(void* _data)
-{
-	Bateau* bateau = (Bateau*)_data;
-
-	hlt::Position best_halite_position = bateau->ship->position;
-	hlt::Halite best_halite = 0;
-
-	for (int lookup_y = bateau->ship->position.y - SHIP_VIEW_DISTANCE; lookup_y <= bateau->ship->position.y + SHIP_VIEW_DISTANCE; lookup_y++)
-	{
-		int width = SHIP_VIEW_DISTANCE - ((lookup_y - bateau->ship->position.y) < 0 ? -(lookup_y - bateau->ship->position.y) : (lookup_y - bateau->ship->position.y));
-		for (int lookup_x = bateau->ship->position.x - width; lookup_x <= bateau->ship->position.x + width; lookup_x++)
-		{
-			if (bateau->m_game->game_map->at({ lookup_x, lookup_y })->halite >= best_halite)
-			{
-				if (
-					bateau->m_game->game_map->at({ lookup_x, lookup_y })->halite == best_halite &&
-					bateau->m_game->game_map->calculate_distance(bateau->ship->position, best_halite_position) <
-					bateau->m_game->game_map->calculate_distance(bateau->ship->position, { lookup_x, lookup_y })
-					)
-				{
-					continue;
-				}
-				best_halite = bateau->m_game->game_map->at({ lookup_x, lookup_y })->halite;
-				best_halite_position = { lookup_x, lookup_y };
-			}
-		}
-	}
-
-	int distance = bateau->m_game->game_map->calculate_distance(bateau->ship->position, best_halite_position);
-	if (distance == 0)
-		return 0.0f;
-
-
-	float v = best_halite / 1000.0f;
-	LOG(std::to_string(bateau->ship->id) + " transKeepMovingToHalite " + std::to_string(v));
-	return v;
-	LOG(std::to_string(bateau->ship->id) + " transKeepMovingToHalite 0");
-	return 0.0f;
-}
-
-float transitionBoatToDropoff(void* _data)
-{
-	Bateau* bateau = (Bateau*)_data;
-
-	if (bateau->m_joueur->boatAboutToTransform == bateau->m_ship_id)
-		return 10000.0f;
-	return -1.0f;
-}
-
+#include "bateau_transitions.hpp"
 
 void wrpCollectHalite(void* _data)
 {
@@ -330,6 +31,23 @@ void wrpTransformDropoff(void* _data)
 	Bateau* bateau = (Bateau*)_data;
 	bateau->transformDropoff();
 }
+
+
+Bateau::Bateau(hlt::Game* _game, std::shared_ptr<hlt::Player> _player, Joueur* _joueur, hlt::EntityId _id)
+{
+	m_game		= _game;
+	m_player	= _player;
+	m_ship_id	= _id;
+	m_joueur	= _joueur;
+
+	setupStateMachine();
+};
+
+Bateau::~Bateau()
+{
+	delete m_state_machine;
+};
+
 
 void Bateau::setupStateMachine()
 {
@@ -411,15 +129,8 @@ void Bateau::decide(std::vector <hlt::Command>* _command_queue, std::shared_ptr<
 
 	LOG(std::to_string(ship->id) + " " + lastState);
 
-
-	//LOG(std::to_string(ship->id) + " Evaluate");
 	m_current_state = m_state_machine->Evaluate(this);
-	//LOG(std::to_string(ship->id) + " Behave");
 	m_state_machine->Behave(this);
-	//LOG(std::to_string(ship->id) + " End");
-
-	//LOG(std::to_string(ship->id) + "[" + std::to_string(ship->position.x) + "," + std::to_string(ship->position.y) + "]");
-
 };
 
 void Bateau::collectHalites()
@@ -528,7 +239,7 @@ void Bateau::moveToTarget()
 void Bateau::transformDropoff()
 {
 	command_queue->push_back(ship->make_dropoff());
-	hlt::log::log("Create dropoff!");
+	LOG("Create dropoff!");
 }
 
 int shipIndex(std::vector<Bateau*>* _bateaux, hlt::EntityId _id)

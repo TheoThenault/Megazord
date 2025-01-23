@@ -148,6 +148,7 @@
     <ClCompile Include="..\hlt\player.cpp" />
     <ClCompile Include="..\hlt\ship.cpp" />
     <ClCompile Include="..\Megazord\bateau.cpp" />
+    <ClCompile Include="..\Megazord\bateau_transitions.cpp" />
     <ClCompile Include="..\Megazord\fsm.cpp" />
     <ClCompile Include="..\Megazord\joueur.cpp" />
     <ClCompile Include="..\Megazord\rules.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="..\hlt\shipyard.hpp" />
     <ClInclude Include="..\hlt\types.hpp" />
     <ClInclude Include="..\Megazord\bateau.hpp" />
+    <ClInclude Include="..\Megazord\bateau_transitions.hpp" />
     <ClInclude Include="..\Megazord\fsm.hpp" />
     <ClInclude Include="..\Megazord\joueur.hpp" />
     <ClInclude Include="..\Megazord\rules.hpp" />
