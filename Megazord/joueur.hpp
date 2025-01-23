@@ -34,7 +34,7 @@ public:
 
 	int m_expected_halite;
 
-	int boatAboutToTransform = -1;
+	int m_boatAboutToTransform = -1;
 
 private:
 

@@ -110,10 +110,10 @@ void Joueur::think(std::shared_ptr<hlt::Player> _player)
 
 	m_expected_halite = m_player->halite;
 
-	if (boatAboutToTransform != -1)
+	if (m_boatAboutToTransform != -1)
 	{
 		m_expected_halite -= COST_CREATE_DROPOFF;
-		boatAboutToTransform = -1;
+		m_boatAboutToTransform = -1;
 	}
 
 	std::string action = m_rule_engine->infer();
@@ -176,7 +176,7 @@ void Joueur::createDropoff()
 	{
 		if (m_expected_halite - COST_CREATE_DROPOFF > PLAYER_MIN_HALITE_THRESHOLD)
 		{
-			boatAboutToTransform = eligible_ships[best_index]->id;
+			m_boatAboutToTransform = eligible_ships[best_index]->id;
 			LOG("ABOUT TO CREATE DROPOFF");
 		}
 	}

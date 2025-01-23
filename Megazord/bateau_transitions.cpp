@@ -7,13 +7,63 @@
 #include "../hlt/game.hpp"
 #include "../hlt/constants.hpp"
 
+hlt::Position findClosestStorage(Bateau* _bateau)
+{
+	int closest_storage_distance = _bateau->m_game->game_map->calculate_distance(
+		_bateau->ship->position, _bateau->m_player->shipyard->position
+	);
+	hlt::Position closest_storage = _bateau->m_player->shipyard->position;
+
+	for (auto& dropoff_pair : _bateau->m_player->dropoffs)
+	{
+		std::shared_ptr<hlt::Dropoff> dropoff = dropoff_pair.second;
+		int distance = _bateau->m_game->game_map->calculate_distance(
+			_bateau->ship->position, dropoff->position
+		);
+
+		if (distance < closest_storage_distance)
+		{
+			closest_storage_distance = distance;
+			closest_storage = dropoff->position;
+		}
+	}
+	return closest_storage;
+}
+
+hlt::Position findClosestEnemie(Bateau* _bateau)
+{
+	hlt::Position closest_enemie = { -1, -1 };
+	int closest_enemie_distance = 1000;
+	int closest_enemie_halite = 0;
+	for (auto& player : _bateau->m_game->players)
+	{
+		if (player == _bateau->m_player)
+			continue;
+
+		for (auto& ship_pair : player->ships)
+		{
+			int distance = _bateau->m_game->game_map->calculate_distance(
+				_bateau->ship->position, ship_pair.second->position
+			);
+
+			if (distance < closest_enemie_distance && distance < ENEMIE_SEARCH_RADIUS)
+			{
+				closest_enemie_distance = distance;
+				closest_enemie = ship_pair.second->position;
+				closest_enemie_halite = ship_pair.second->halite;
+			}
+		}
+	}
+	return closest_enemie;
+}
+
 float transRamasserHaliteToMoveToHalite(void* _data)
 {
 	Bateau* bateau = (Bateau*)_data;
 
-	if (bateau->m_game->game_map->at(bateau->ship)->halite < MINE_HALITE_THRESHOLD && 
-		bateau->ship->halite < SHIP_FULL
-		) {
+	if (bateau->m_game->game_map->at(bateau->ship)->halite < MINE_HALITE_THRESHOLD
+		&& bateau->ship->halite < SHIP_FULL)
+	{
 		LOG(std::to_string(bateau->ship->id) + " transRamasserHaliteToMoveToHalite 1");
 		return 1.0f;
 	}
@@ -28,24 +78,10 @@ float transRamasserHaliteToMoveToStorage(void* _data)
 	int halite_in_ship = bateau->ship->halite;
 	float cargaison = halite_in_ship / ((float)MAX_HALITE_IN_SHIP);
 
+	hlt::Position closest_storage = findClosestStorage(bateau);
 	int closest_storage_distance = bateau->m_game->game_map->calculate_distance(
-		bateau->ship->position, bateau->m_player->shipyard->position
+		bateau->ship->position, closest_storage
 	);
-	hlt::Position closest_storage = bateau->m_player->shipyard->position;
-
-	for (auto& dropoff_pair : bateau->m_player->dropoffs)
-	{
-		std::shared_ptr<hlt::Dropoff> dropoff = dropoff_pair.second;
-		int distance = bateau->m_game->game_map->calculate_distance(
-			bateau->ship->position, dropoff->position
-		);
-
-		if (distance < closest_storage_distance)
-		{
-			closest_storage_distance = distance;
-			closest_storage = dropoff->position;
-		}
-	}
 	
 	float distance_coeff = map(
 		STORAGE_DISTANCE_CLOSE, STORAGE_DISTANCE_FAR,
@@ -70,10 +106,8 @@ float transMoveToHaliteToRamasserHalite(void* _data)
 		LOG(std::to_string(bateau->ship->id) + " transMoveToHaliteToRamasserHalite 1");
 		return 1;
 	}
-	else {
-		LOG(std::to_string(bateau->ship->id) + " transMoveToHaliteToRamasserHalite 0");
-		return 0;
-	}
+	LOG(std::to_string(bateau->ship->id) + " transMoveToHaliteToRamasserHalite 0");
+	return 0;
 }
 
 float transMoveToStorageToMoveToHalites(void* _data)
@@ -84,10 +118,8 @@ float transMoveToStorageToMoveToHalites(void* _data)
 		LOG(std::to_string(bateau->ship->id) + " transMoveToStorageToMoveToHalites 1");
 		return 1;
 	}
-	else {
-		LOG(std::to_string(bateau->ship->id) + " transMoveToStorageToMoveToHalites 0");
-		return 0;
-	}
+	LOG(std::to_string(bateau->ship->id) + " transMoveToStorageToMoveToHalites 0");
+	return 0;
 }
 
 float transAttackEnemie(void* _data)
@@ -98,35 +130,16 @@ float transAttackEnemie(void* _data)
 	int halite_in_ship = bateau->ship->halite;
 	float cargaison = halite_in_ship / ((float)MAX_HALITE_IN_SHIP);
 
-	hlt::Position closest_enemie = { 0, 0 };
-	int closest_enemie_distance = 1000;
-	int closest_enemie_halite = 0;
-	for (auto& player : bateau->m_game->players)
-	{
-		if (player == bateau->m_player)
-			continue;
+	bateau->m_target_enemie = findClosestEnemie(bateau);
 
-		for (auto& ship_pair : player->ships)
-		{
-			int distance = bateau->m_game->game_map->calculate_distance(
-				bateau->ship->position, ship_pair.second->position
-			);
+	std::shared_ptr<hlt::Ship> enemie_ship = bateau->m_game->game_map->at(bateau->m_target_enemie)->ship;
 
-			if (distance < closest_enemie_distance && distance < ENEMIE_SEARCH_RADIUS)
-			{
-				closest_enemie_distance = distance;
-				closest_enemie = ship_pair.second->position;
-				closest_enemie_halite = ship_pair.second->halite;
-			}
-		}
-	}
-
-	bateau->m_target_enemie = closest_enemie;
+	int closest_enemie_halite = enemie_ship == nullptr ? 0 : enemie_ship->halite;
 
 	float cargaison_enemie = closest_enemie_halite / ((float)MAX_HALITE_IN_SHIP);
 
 	int threatened = diffNombreBateau(bateau->m_game, bateau->m_player, &(bateau->ship->position)) < DIFF_NOMBRE_BATEAU_THREAT_THRESHOLD;
-
+	
 	if (((1-threatened) * cargaison_enemie * 1/cargaison) > 0.5f) {
 		LOG(std::to_string(bateau->ship->id) + " transAttackEnemie 1");
 		return 1.0f;
@@ -142,50 +155,14 @@ float transFlee(void* _data)
 
 	// TODO : Nearest dropoff en une fonction
 
+	hlt::Position closest_storage = findClosestStorage(bateau);
 	int closest_storage_distance = bateau->m_game->game_map->calculate_distance(
-		bateau->ship->position, bateau->m_player->shipyard->position
+		bateau->ship->position, closest_storage
 	);
-	hlt::Position closest_storage = bateau->m_player->shipyard->position;
-
-	for (auto& dropoff_pair : bateau->m_player->dropoffs)
-	{
-		std::shared_ptr<hlt::Dropoff> dropoff = dropoff_pair.second;
-		int distance = bateau->m_game->game_map->calculate_distance(
-			bateau->ship->position, dropoff->position
-		);
-
-		if (distance < closest_storage_distance)
-		{
-			closest_storage_distance = distance;
-			closest_storage = dropoff->position;
-		}
-	}
 	
 	bateau->m_target_storage = closest_storage;
 
-	hlt::Position closest_enemie = { 0, 0 };
-	int closest_enemie_distance = 1000;
-	for (auto& player : bateau->m_game->players)
-	{
-		if (player == bateau->m_player)
-			continue;
-
-		for (auto& ship_pair : player->ships)
-		{
-			int distance = bateau->m_game->game_map->calculate_distance(
-				bateau->ship->position, ship_pair.second->position
-			);
-
-			if (distance < closest_enemie_distance && distance < ENEMIE_SEARCH_RADIUS)
-			{
-				closest_enemie_distance = distance;
-				closest_enemie = ship_pair.second->position;
-			}
-		}
-	}
-
-	bateau->m_target_enemie = closest_enemie;
-
+	bateau->m_target_enemie = findClosestEnemie(bateau);
 
 	if (diffNombreBateau(bateau->m_game, bateau->m_player, &(bateau->ship->position)) < 0) {
 		LOG(std::to_string(bateau->ship->id) + " transFlee 1");
@@ -270,7 +247,7 @@ float transitionBoatToDropoff(void* _data)
 {
 	Bateau* bateau = (Bateau*)_data;
 
-	if (bateau->m_joueur->boatAboutToTransform == bateau->m_ship_id)
+	if (bateau->m_joueur->m_boatAboutToTransform == bateau->m_ship_id)
 		return 10000.0f;
 	return -1.0f;
 }

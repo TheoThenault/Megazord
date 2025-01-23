@@ -6,7 +6,7 @@
 #include "../hlt/constants.hpp"
 #include "../hlt/log.hpp"
 #include "utils.hpp"
-
+#include "bateau_transitions.hpp"
 
 void wrpCollectHalite(void* _data)
 {
